@@ -300,8 +300,8 @@ All Handlebars rendering happens client-side. The PoracleNG API only returns enr
 **Fully functional** (pure formatting, no external data):
 - `round`, `numberFormat`, `pad0`, `concat`
 - `#if`, `#each`, `#unless`, `#with`
-- `compare`, `eq`, `isnt`, `or`, `and`
-- `@budibase/handlebars-helpers` equivalents (math, string, comparison helpers)
+- `compare`, `eq`, `isnt`, `or`, `and`, `forEach`, `minus`
+- Helpers matching the PoracleNG Go backend exactly — implemented directly (not imported from budibase). We can reference the budibase source for parity where the Go backend originally derived from it, but the goal is to match PoracleNG's actual helper set.
 
 **Dummy returns** (would need game data for real values):
 - `pokemonName` → returns the input ID as string
@@ -313,6 +313,8 @@ All Handlebars rendering happens client-side. The PoracleNG API only returns enr
 - `calculateCp` → returns 0
 
 These dummy helpers are sufficient for template editing — the real values come from the variable map (which already contains `fullName`, `quickMoveName`, etc.). The helpers are only invoked when users explicitly call them in templates rather than using the pre-computed fields.
+
+Note: The enriched variable maps contain sub-fields (e.g. `genderData.name`, `genderData.emoji`, `baseStats.baseAttack`) and arrays (e.g. `pvpGreat`, `matched`, `weaknessList`). Handlebars handles these naturally via dot notation and `{{#each}}` blocks. The test data snapshots must preserve the full nested structure.
 
 When connected to the API, users can click "Enrich" to get a real variable map, making the preview accurate regardless of which helpers are used.
 
