@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { createEngine, renderDtsTemplate } from '../lib/handlebars-engine';
+import { createEngine, renderDtsTemplate, registerPartials } from '../lib/handlebars-engine';
 
 export function useHandlebars() {
   const engine = useMemo(() => createEngine(), []);
@@ -19,5 +19,12 @@ export function useHandlebars() {
     [engine]
   );
 
-  return { render, renderError };
+  const setPartials = useCallback(
+    (partials) => {
+      registerPartials(engine, partials);
+    },
+    [engine]
+  );
+
+  return { render, renderError, setPartials };
 }

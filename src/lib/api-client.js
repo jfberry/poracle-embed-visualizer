@@ -52,6 +52,10 @@ export class PoracleApiClient {
     return this.fetch(`/api/dts/testdata${params}`);
   }
 
+  async getPartials() {
+    return this.fetch('/api/dts/partials');
+  }
+
   async health() {
     // First try direct (works if PoracleNG has CORS enabled)
     try {

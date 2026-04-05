@@ -9,6 +9,22 @@ export function createEngine() {
   return hbs;
 }
 
+/**
+ * Register Handlebars partials on the engine.
+ * partials is an object: { name: templateString, ... }
+ */
+export function registerPartials(engine, partials) {
+  // Unregister any previously registered partials
+  for (const name of Object.keys(engine.partials)) {
+    engine.unregisterPartial(name);
+  }
+  if (partials) {
+    for (const [name, template] of Object.entries(partials)) {
+      engine.registerPartial(name, template);
+    }
+  }
+}
+
 export function renderTemplate(engine, templateStr, data) {
   const compiled = engine.compile(templateStr, { noEscape: true });
   return compiled(data);

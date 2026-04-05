@@ -11,7 +11,7 @@ import { useApi } from './hooks/useApi';
 
 export default function App() {
   const dts = useDts();
-  const { render, renderError } = useHandlebars();
+  const { render, renderError, setPartials } = useHandlebars();
   const api = useApi();
   const [middleTab, setMiddleTab] = useState('tags');
   const [showMiddle, setShowMiddle] = useState(true);
@@ -79,8 +79,17 @@ export default function App() {
       } catch (err) {
         console.error('Failed to load templates:', err);
       }
+      // Fetch and register Handlebars partials
+      try {
+        const result = await client.getPartials();
+        if (result.partials) {
+          setPartials(result.partials);
+        }
+      } catch (err) {
+        console.error('Failed to load partials:', err);
+      }
     }
-  }, [api, dts]);
+  }, [api, dts, setPartials]);
 
   const handleEnrich = useCallback(async (webhookData) => {
     if (!api.client) return;
