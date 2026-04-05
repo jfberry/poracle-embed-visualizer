@@ -23,7 +23,7 @@ function MessageBody({ compactMode, username, content, webhookMode }) {
         <MessageTimestamp compactMode={compactMode} />
         <span className="username-wrapper v-btm">
           <strong className="user-name">{username}</strong>
-          <span className="bot-tag">BOT</span>
+          <span className="bot-tag">APP</span>
         </span>
         <span className="highlight-separator"> - </span>
         <span className="message-content">
@@ -52,7 +52,7 @@ function CozyMessageHeader({ compactMode, username }) {
     <h2 style={{ lineHeight: '16px' }}>
       <span className="username-wrapper v-btm">
         <strong className="user-name">{username}</strong>
-        <span className="bot-tag">BOT</span>
+        <span className="bot-tag">APP</span>
       </span>
       <span className="highlight-separator"> - </span>
       <MessageTimestamp compactMode={compactMode} />
