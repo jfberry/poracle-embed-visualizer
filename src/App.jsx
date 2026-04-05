@@ -19,6 +19,21 @@ export default function App() {
   const [apiFields, setApiFields] = useState(null);
   const [apiTestScenarios, setApiTestScenarios] = useState(null);
 
+  // DTS template types → testdata webhook types
+  const dtsToWebhookType = {
+    monster: 'pokemon',
+    monsterNoIv: 'pokemon',
+    raid: 'raid',
+    egg: 'raid',
+    invasion: 'pokestop',
+    lure: 'pokestop',
+    quest: 'quest',
+    nest: 'nest',
+    gym: 'gym',
+    'fort-update': 'fort_update',
+    maxbattle: 'max_battle',
+  };
+
   // Fetch fields and test scenarios from API when connected and type changes
   useEffect(() => {
     if (!api.connected || !api.client) {
@@ -29,7 +44,8 @@ export default function App() {
     api.client.getFields(dts.filters.type)
       .then((result) => setApiFields(result.fields || null))
       .catch(() => setApiFields(null));
-    api.client.getTestdata(dts.filters.type)
+    const webhookType = dtsToWebhookType[dts.filters.type] || dts.filters.type;
+    api.client.getTestdata(webhookType)
       .then((result) => setApiTestScenarios(result.testdata || null))
       .catch(() => setApiTestScenarios(null));
   }, [api.connected, api.client, dts.filters.type]);
@@ -69,7 +85,8 @@ export default function App() {
   const handleEnrich = useCallback(async (webhookData) => {
     if (!api.client) return;
     try {
-      const result = await api.client.enrichWebhook(dts.filters.type, webhookData || activeTestData);
+      const webhookType = dtsToWebhookType[dts.filters.type] || dts.filters.type;
+      const result = await api.client.enrichWebhook(webhookType, webhookData || activeTestData);
       if (result.variables) {
         setCustomTestData(result.variables);
       }
