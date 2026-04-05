@@ -230,20 +230,15 @@ const baseRules = {
   customEmoji: {
     order: SimpleMarkdown.defaultRules.text.order,
     match(source) {
-      return /^<:(\w+):(\d+)>/.exec(source);
+      return /^<a?:(\w+):(\d+)>/.exec(source);
     },
     parse(capture) {
       const name = capture[1];
       const id = capture[2];
       return {
         emojiId: id,
-        // NOTE: we never actually try to fetch the emote
-        // so checking if colons are required (for 'name') is not
-        // something we can do to begin with
         name: name,
-        src: getEmoteURL({
-          id: id
-        })
+        src: getEmoteURL({ id: id })
       };
     },
     react(node, recurseOutput, state) {
@@ -251,11 +246,71 @@ const baseRules = {
         <img
           draggable={false}
           className={`emoji ${node.jumboable ? 'jumboable' : ''}`}
-          alt={`<:${node.name}:${node.id}>`}
+          alt={`:${node.name}:`}
           title={node.name}
           src={node.src}
           key={state.key}
+          style={{ display: 'inline', verticalAlign: '-0.4em' }}
         />
+      );
+    }
+  },
+  discordTimestamp: {
+    order: SimpleMarkdown.defaultRules.text.order,
+    match(source) {
+      return /^<t:(-?\d+)(?::([tTdDfFR]))?>/.exec(source);
+    },
+    parse(capture) {
+      const timestamp = parseInt(capture[1], 10);
+      const style = capture[2] || 'f';
+      return { timestamp, style };
+    },
+    react(node, recurseOutput, state) {
+      const date = new Date(node.timestamp * 1000);
+      let text;
+      switch (node.style) {
+        case 'R': {
+          // Relative time
+          const now = Date.now();
+          const diff = date.getTime() - now;
+          const absDiff = Math.abs(diff);
+          const future = diff > 0;
+          if (absDiff < 60000) text = 'just now';
+          else if (absDiff < 3600000) {
+            const mins = Math.round(absDiff / 60000);
+            text = future ? `in ${mins} minute${mins !== 1 ? 's' : ''}` : `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+          } else if (absDiff < 86400000) {
+            const hrs = Math.round(absDiff / 3600000);
+            text = future ? `in ${hrs} hour${hrs !== 1 ? 's' : ''}` : `${hrs} hour${hrs !== 1 ? 's' : ''} ago`;
+          } else {
+            const days = Math.round(absDiff / 86400000);
+            text = future ? `in ${days} day${days !== 1 ? 's' : ''}` : `${days} day${days !== 1 ? 's' : ''} ago`;
+          }
+          break;
+        }
+        case 't': text = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); break;
+        case 'T': text = date.toLocaleTimeString(); break;
+        case 'd': text = date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' }); break;
+        case 'D': text = date.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' }); break;
+        case 'F': text = date.toLocaleString([], { dateStyle: 'full', timeStyle: 'short' }); break;
+        case 'f':
+        default:
+          text = date.toLocaleString([], { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          break;
+      }
+      return (
+        <span
+          key={state.key}
+          className="discord-timestamp"
+          style={{
+            backgroundColor: 'rgba(88,101,242,0.15)',
+            borderRadius: '3px',
+            padding: '0 2px',
+          }}
+          title={date.toLocaleString()}
+        >
+          {text}
+        </span>
       );
     }
   },
