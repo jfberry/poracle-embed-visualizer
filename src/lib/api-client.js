@@ -42,10 +42,18 @@ export class PoracleApiClient {
   }
 
   async health() {
-    // /health doesn't require auth - use plain fetch
-    const res = await fetch(`${this.baseUrl}/health`);
-    if (res.ok) return res.json();
-    // Fallback: try an authenticated endpoint
-    return this.fetch('/api/config/poracleWeb');
+    // Try /health first (no auth needed)
+    try {
+      const res = await fetch(`${this.baseUrl}/health`);
+      if (res.ok) return res.json();
+    } catch {
+      // Network error — server might not be reachable
+    }
+    // Fallback: try an authenticated endpoint to verify both connectivity and auth
+    try {
+      return await this.fetch('/api/config/poracleWeb');
+    } catch (err) {
+      throw new Error(`Cannot connect to ${this.baseUrl} — is PoracleNG running? (${err.message})`);
+    }
   }
 }

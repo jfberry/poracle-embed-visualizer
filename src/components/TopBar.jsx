@@ -1,5 +1,5 @@
 export default function TopBar({
-  filters, setFilters, availableTypes, availableIds, onLoadFile, onSave,
+  filters, setFilters, availableTypes, availableIds, availableLanguages = ['en'], onLoadFile, onSave,
   showMiddle, onToggleMiddle,
 }) {
   return (
@@ -25,7 +25,7 @@ export default function TopBar({
         <label className="text-gray-400">Lang:</label>
         <select value={filters.language} onChange={(e) => setFilters({ ...filters, language: e.target.value })}
           className="bg-gray-800 text-yellow-300 px-2 py-0.5 rounded text-sm border border-gray-600">
-          <option value="en">en</option>
+          {availableLanguages.map((l) => <option key={l} value={l}>{l}</option>)}
         </select>
       </div>
       <div className="flex gap-2">

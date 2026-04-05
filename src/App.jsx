@@ -90,6 +90,7 @@ export default function App() {
     <div className="flex flex-col h-screen bg-gray-950 text-gray-200">
       <TopBar filters={dts.filters} setFilters={dts.setFilters}
         availableTypes={dts.availableTypes} availableIds={dts.availableIds}
+        availableLanguages={dts.availableLanguages}
         onLoadFile={handleLoadFile} onSave={handleSave}
         showMiddle={showMiddle} onToggleMiddle={() => setShowMiddle((v) => !v)} />
       <div className="flex flex-1 min-h-0">
