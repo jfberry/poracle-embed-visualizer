@@ -96,7 +96,7 @@ export default function App() {
     if (!api.client) return;
     try {
       const webhookType = dtsToWebhookType[dts.filters.type] || dts.filters.type;
-      const result = await api.client.enrichWebhook(webhookType, webhookData || activeTestData);
+      const result = await api.client.enrichWebhook(webhookType, webhookData || activeTestData, dts.filters.language);
       if (result.variables) {
         setCustomTestData(result.variables);
       }
