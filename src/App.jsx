@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import TopBar from './components/TopBar';
 import TemplateEditor from './components/TemplateEditor';
 import TagPicker from './components/TagPicker';
@@ -16,6 +16,18 @@ export default function App() {
   const [middleTab, setMiddleTab] = useState('tags');
   const [showMiddle, setShowMiddle] = useState(true);
   const [customTestData, setCustomTestData] = useState(null);
+  const [apiFields, setApiFields] = useState(null);
+
+  // Fetch fields from API when connected and type changes
+  useEffect(() => {
+    if (!api.connected || !api.client) {
+      setApiFields(null);
+      return;
+    }
+    api.client.getFields(dts.filters.type)
+      .then((result) => setApiFields(result.fields || null))
+      .catch(() => setApiFields(null));
+  }, [api.connected, api.client, dts.filters.type]);
 
   const activeTestData = customTestData || dts.currentTestData;
 
@@ -48,6 +60,18 @@ export default function App() {
       }
     }
   }, [api, dts]);
+
+  const handleEnrich = useCallback(async () => {
+    if (!api.client) return;
+    try {
+      const result = await api.client.enrichWebhook(dts.filters.type, activeTestData);
+      if (result.variables) {
+        setCustomTestData(result.variables);
+      }
+    } catch (err) {
+      console.error('Enrich failed:', err);
+    }
+  }, [api.client, dts.filters.type, activeTestData]);
 
   const handleInsertTag = useCallback((tag) => {
     // For now, just copy to clipboard. Future: insert at cursor in active editor field.
@@ -125,7 +149,7 @@ export default function App() {
             </div>
             <div className="flex-1 min-h-0">
               {middleTab === 'tags' ? (
-                <TagPicker type={dts.filters.type} onInsertTag={handleInsertTag} />
+                <TagPicker type={dts.filters.type} onInsertTag={handleInsertTag} apiFields={apiFields} />
               ) : (
                 <TestDataPanel
                   testData={activeTestData}
@@ -133,6 +157,7 @@ export default function App() {
                   scenarios={dts.availableScenarios}
                   currentScenario={dts.testScenario}
                   onScenarioChange={handleScenarioChange}
+                  onEnrich={api.connected ? handleEnrich : null}
                 />
               )}
             </div>

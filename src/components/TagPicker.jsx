@@ -58,13 +58,13 @@ const helpers = [
   { label: '{{#forEach ...}}', snippet: '{{#forEach arrayField}}...{{/forEach}}' },
 ];
 
-export default function TagPicker({ type, onInsertTag }) {
+export default function TagPicker({ type, onInsertTag, apiFields }) {
   const [showRaw, setShowRaw] = useState(false);
   const [showDeprecated, setShowDeprecated] = useState(false);
   const [lastCopied, setLastCopied] = useState(null);
 
   const grouped = useMemo(() => {
-    const fields = getFieldsForType(type);
+    const fields = apiFields && apiFields.length > 0 ? apiFields : getFieldsForType(type);
     const filtered = fields.filter((f) => {
       if (f.rawWebhook && !showRaw) return false;
       if (f.deprecated && !showDeprecated) return false;
@@ -80,7 +80,7 @@ export default function TagPicker({ type, onInsertTag }) {
       groups[cat].push(f);
     }
     return groups;
-  }, [type, showRaw, showDeprecated]);
+  }, [type, showRaw, showDeprecated, apiFields]);
 
   const handleClick = (field) => {
     const tag = urlFields.has(field.name) ? `{{{${field.name}}}}` : `{{${field.name}}}`;

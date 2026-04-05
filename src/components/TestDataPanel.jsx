@@ -1,6 +1,6 @@
 import RawEditor from './RawEditor';
 
-export default function TestDataPanel({ testData, onTestDataChange, scenarios, currentScenario, onScenarioChange }) {
+export default function TestDataPanel({ testData, onTestDataChange, scenarios, currentScenario, onScenarioChange, onEnrich }) {
   const jsonStr = typeof testData === 'string' ? testData : JSON.stringify(testData, null, 2);
 
   const handleEditorChange = (newStr) => {
@@ -27,6 +27,16 @@ export default function TestDataPanel({ testData, onTestDataChange, scenarios, c
           ))}
         </select>
       </div>
+
+      {/* Enrich button */}
+      {onEnrich && (
+        <div className="px-2 py-1.5 border-b border-gray-700 shrink-0">
+          <button onClick={onEnrich}
+            className="w-full text-xs py-1 bg-blue-900/30 text-blue-300 border border-blue-700 rounded hover:bg-blue-900/50">
+            Enrich via PoracleNG
+          </button>
+        </div>
+      )}
 
       {/* JSON editor */}
       <div className="flex-1 min-h-0">
