@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "homepage": "https://leovoel.github.io/embed-visualizer/",
+  "homepage": "https://jfberry.github.io/poracle-embed-visualizer/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

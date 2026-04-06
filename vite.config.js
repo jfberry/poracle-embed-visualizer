@@ -7,6 +7,7 @@ const poracleUrl = process.env.PORACLE_URL || 'http://localhost:3030';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/poracle-embed-visualizer/',
   server: {
     port: 3000,
     proxy: {
