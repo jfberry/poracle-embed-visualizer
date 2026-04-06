@@ -123,30 +123,22 @@ export default function TemplateSelector({ templates, currentTemplate, onSelect 
                   {type}
                   <span className="text-gray-600 font-normal ml-1">({entries.length})</span>
                 </div>
-                {entries.map((t, i) => {
-                  const isTelegram = t.platform === 'telegram';
-                  return (
+                {entries.map((t, i) => (
                     <button
                       key={`${t.type}-${t.id}-${t.platform}-${t.language}-${i}`}
-                      onClick={() => { if (!isTelegram) { onSelect(t); setOpen(false); setSearch(''); } }}
-                      disabled={isTelegram}
+                      onClick={() => { onSelect(t); setOpen(false); setSearch(''); }}
                       className={`w-full text-left px-3 py-1.5 text-sm transition-colors flex items-baseline gap-2 ${
-                        isTelegram
-                          ? 'opacity-40 cursor-not-allowed'
-                          : isSelected(t)
-                            ? 'bg-blue-900/20 border-l-2 border-blue-500'
-                            : 'hover:bg-gray-800'
+                        isSelected(t)
+                          ? 'bg-blue-900/20 border-l-2 border-blue-500'
+                          : 'hover:bg-gray-800'
                       }`}
                     >
-                      <span className={`font-mono shrink-0 ${isTelegram ? 'text-gray-500' : 'text-yellow-300'}`}>
+                      <span className="font-mono shrink-0 text-yellow-300">
                         {t.id || '1'}
                       </span>
-                      <span className="text-gray-400 text-xs shrink-0">
+                      <span className={`text-xs shrink-0 ${t.platform === 'telegram' ? 'text-blue-400' : 'text-gray-400'}`}>
                         {t.platform}
                       </span>
-                      {isTelegram && (
-                        <span className="text-gray-600 text-[9px] shrink-0">(coming soon)</span>
-                      )}
                       {t.language && (
                         <span className="text-gray-500 text-xs shrink-0">
                           {t.language}
@@ -163,8 +155,7 @@ export default function TemplateSelector({ templates, currentTemplate, onSelect 
                         </span>
                       )}
                     </button>
-                  );
-                })}
+                ))}
               </div>
             ))}
             {Object.keys(grouped).length === 0 && (

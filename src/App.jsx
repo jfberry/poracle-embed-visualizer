@@ -5,6 +5,7 @@ import TemplateEditor from './components/TemplateEditor';
 import TagPicker from './components/TagPicker';
 import TestDataPanel from './components/TestDataPanel';
 import DiscordPreview from './components/DiscordPreview';
+import TelegramPreview from './components/TelegramPreview';
 import SendTestButton from './components/SendTestButton';
 import StatusBar from './components/StatusBar';
 import { useDts } from './hooks/useDts';
@@ -233,7 +234,7 @@ export default function App() {
       <div className="flex flex-1 min-h-0">
         {/* Left panel — Template Editor */}
         <div ref={editorContainerRef} className="flex-1 min-w-0 border-r border-gray-700">
-          <TemplateEditor template={dts.currentTemplate?.template} onChange={dts.updateTemplate} />
+          <TemplateEditor template={dts.currentTemplate?.template} onChange={dts.updateTemplate} platform={dts.filters.platform} />
         </div>
         {/* Middle panel — Tags / Test Data (collapsible) */}
         {showMiddle && (
@@ -279,7 +280,11 @@ export default function App() {
         )}
         {/* Right panel — Discord Preview */}
         <div className="flex-1 min-w-0">
-          <DiscordPreview data={renderedData} error={renderError} />
+          {dts.filters.platform === 'telegram' ? (
+            <TelegramPreview data={renderedData} />
+          ) : (
+            <DiscordPreview data={renderedData} error={renderError} />
+          )}
         </div>
       </div>
       <StatusBar connected={api.connected} url={api.url} testScenario={dts.testScenario}

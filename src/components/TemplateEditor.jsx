@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
 import FormEditor from './FormEditor';
+import TelegramFormEditor from './TelegramFormEditor';
 import RawEditor from './RawEditor';
 
-export default function TemplateEditor({ template, onChange }) {
+export default function TemplateEditor({ template, onChange, platform }) {
   const [mode, setMode] = useState('form');
 
   const handleRawChange = useCallback(
@@ -16,6 +17,8 @@ export default function TemplateEditor({ template, onChange }) {
     },
     [onChange]
   );
+
+  const isTelegram = platform === 'telegram';
 
   return (
     <div className="flex flex-col h-full">
@@ -43,7 +46,11 @@ export default function TemplateEditor({ template, onChange }) {
       </div>
       <div className="flex-1 overflow-y-auto">
         {mode === 'form' ? (
-          <FormEditor template={template} onChange={onChange} />
+          isTelegram ? (
+            <TelegramFormEditor template={template} onChange={onChange} />
+          ) : (
+            <FormEditor template={template} onChange={onChange} />
+          )
         ) : (
           <RawEditor value={JSON.stringify(template, null, 2)} onChange={handleRawChange} />
         )}
