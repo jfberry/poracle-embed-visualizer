@@ -2,7 +2,7 @@ import TemplateSelector from './TemplateSelector';
 
 export default function TopBar({
   templates, currentTemplate, onSelectTemplate,
-  onLoadFile, onSave,
+  onLoadFile, onSave, onDownload, connected,
   showMiddle, onToggleMiddle, sendTestButton,
 }) {
   return (
@@ -23,7 +23,19 @@ export default function TopBar({
         <button onClick={onLoadFile}
           className="bg-gray-800 text-teal-300 px-3 py-0.5 rounded text-sm border border-gray-600 hover:bg-gray-700">Load File</button>
         <button onClick={onSave}
-          className="bg-gray-800 text-teal-300 px-3 py-0.5 rounded text-sm border border-gray-600 hover:bg-gray-700">Save</button>
+          className="bg-gray-800 text-teal-300 px-3 py-0.5 rounded text-sm border border-gray-600 hover:bg-gray-700"
+          title={connected ? 'Save to PoracleNG' : 'Download dts.json'}
+        >
+          {connected ? 'Save to Poracle' : 'Save'}
+        </button>
+        {connected && (
+          <button onClick={onDownload}
+            className="bg-gray-800 text-gray-400 px-3 py-0.5 rounded text-sm border border-gray-600 hover:bg-gray-700"
+            title="Download dts.json file"
+          >
+            Download
+          </button>
+        )}
       </div>
     </div>
   );

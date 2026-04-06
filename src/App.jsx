@@ -151,7 +151,26 @@ export default function App() {
     input.click();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (api.connected && api.client) {
+      try {
+        const result = await api.client.saveTemplates(dts.templates);
+        alert(`Saved to PoracleNG: ${result.updated || 0} updated, ${result.inserted || 0} inserted`);
+      } catch (err) {
+        alert('Failed to save to PoracleNG: ' + err.message);
+      }
+    } else {
+      const blob = new Blob([JSON.stringify(dts.templates, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dts.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  const handleDownload = () => {
     const blob = new Blob([JSON.stringify(dts.templates, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -167,7 +186,8 @@ export default function App() {
         templates={dts.templates}
         currentTemplate={dts.currentTemplate}
         onSelectTemplate={dts.selectTemplate}
-        onLoadFile={handleLoadFile} onSave={handleSave}
+        onLoadFile={handleLoadFile} onSave={handleSave} onDownload={handleDownload}
+        connected={api.connected}
         showMiddle={showMiddle} onToggleMiddle={() => setShowMiddle((v) => !v)}
         sendTestButton={api.connected && <SendTestButton onSend={handleSendTest} />} />
       <div className="flex flex-1 min-h-0">
