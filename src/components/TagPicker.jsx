@@ -44,7 +44,8 @@ const helpers = [
 // Fields that have iterable block scopes (for "insert each block" buttons)
 const iterableFieldNames = ['pvpGreat', 'pvpUltra', 'pvpLittle', 'matched', 'weaknessList', 'evolutions'];
 
-export default function TagPicker({ type, onInsertTag, apiFields, blockContext }) {
+export default function TagPicker({ type, onInsertTag, apiFields, blockContext, partials }) {
+  const [expandedPartial, setExpandedPartial] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
   const [showDeprecated, setShowDeprecated] = useState(false);
   const [lastInserted, setLastInserted] = useState(null);
@@ -226,6 +227,41 @@ export default function TagPicker({ type, onInsertTag, apiFields, blockContext }
             ))}
           </div>
         </div>
+
+        {/* Partials section */}
+        {partials && Object.keys(partials).length > 0 && (
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider mb-1 text-amber-400">
+              Partials ({Object.keys(partials).length})
+            </div>
+            <div className="space-y-0.5">
+              {Object.entries(partials).sort(([a], [b]) => a.localeCompare(b)).map(([name, content]) => (
+                <div key={name} className="flex items-start">
+                  <button
+                    onClick={() => setExpandedPartial(expandedPartial === name ? null : name)}
+                    className="text-gray-500 hover:text-gray-300 text-[10px] px-0.5 shrink-0 mt-0.5"
+                  >
+                    {expandedPartial === name ? '▼' : '▶'}
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <button
+                      onClick={() => doInsert(`{{> ${name}}}`)}
+                      title={`Insert {{> ${name}}}\n\n${content.substring(0, 200)}`}
+                      className="text-[11px] font-mono text-amber-300 hover:text-amber-200 transition-colors truncate block w-full text-left"
+                    >
+                      {name}
+                    </button>
+                    {expandedPartial === name && (
+                      <pre className="text-[9px] text-gray-500 font-mono whitespace-pre-wrap break-all mt-0.5 mb-1 pl-1 border-l border-gray-700 max-h-32 overflow-y-auto">
+                        {content}
+                      </pre>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Toggles at bottom */}

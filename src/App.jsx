@@ -21,6 +21,7 @@ export default function App() {
   const [customTestData, setCustomTestData] = useState(null);
   const [apiFields, setApiFields] = useState(null);
   const [apiTestScenarios, setApiTestScenarios] = useState(null);
+  const [partials, setPartialsState] = useState(null);
 
   // DTS template types → testdata webhook types
   const dtsToWebhookType = {
@@ -87,6 +88,7 @@ export default function App() {
         const result = await client.getPartials();
         if (result.partials) {
           setPartials(result.partials);
+          setPartialsState(result.partials);
         }
       } catch (err) {
         console.error('Failed to load partials:', err);
@@ -200,7 +202,7 @@ export default function App() {
             </div>
             <div className="flex-1 min-h-0">
               {middleTab === 'tags' ? (
-                <TagPicker type={dts.filters.type} onInsertTag={handleInsertTag} apiFields={apiFields} blockContext={blockContext} />
+                <TagPicker type={dts.filters.type} onInsertTag={handleInsertTag} apiFields={apiFields} blockContext={blockContext} partials={partials} />
               ) : (
                 <TestDataPanel
                   testData={activeTestData}
