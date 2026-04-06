@@ -144,7 +144,7 @@ function MapField({ value, onChange }) {
   return (
     <div className="space-y-1.5">
       {entries.map(([k, v], i) => (
-        <div key={i} className="flex gap-1.5 items-center">
+        <div key={`${k}-${i}`} className="flex gap-1.5 items-center">
           <input
             className={inputClass + ' flex-1'}
             value={k}

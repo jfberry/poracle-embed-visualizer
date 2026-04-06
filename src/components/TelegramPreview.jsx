@@ -82,10 +82,11 @@ function TextMessage({ content, parseMode, webpagePreview }) {
 
   const html = useMemo(() => {
     if (parseMode?.toLowerCase() === 'html') {
-      // Already HTML — just sanitize dangerous tags
-      return content
-        .replace(/<script/gi, '&lt;script')
-        .replace(/<\/script/gi, '&lt;/script');
+      // Allowlist only HTML tags Telegram actually supports
+      const allowedTags = new Set(['b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del', 'code', 'pre', 'a', 'br']);
+      return content.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag) => {
+        return allowedTags.has(tag.toLowerCase()) ? match : match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      });
     }
     return parseTelegramMarkdown(content);
   }, [content, parseMode]);

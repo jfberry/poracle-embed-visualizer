@@ -2,13 +2,13 @@ import { useState } from 'react';
 
 export default function ConnectScreen({ onConnect, onImportFile, error }) {
   const [url, setUrl] = useState(() => localStorage.getItem('poracle-api-url') || 'http://localhost:3030');
-  const [secret, setSecret] = useState(() => localStorage.getItem('poracle-api-secret') || '');
+  const [secret, setSecret] = useState(() => sessionStorage.getItem('poracle-api-secret') || '');
   const [connecting, setConnecting] = useState(false);
 
   const handleConnect = async () => {
     if (!url.trim()) return;
     localStorage.setItem('poracle-api-url', url.trim());
-    localStorage.setItem('poracle-api-secret', secret);
+    sessionStorage.setItem('poracle-api-secret', secret);
     setConnecting(true);
     try {
       await onConnect(url.trim(), secret);

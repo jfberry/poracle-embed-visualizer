@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 
 /**
  * Single unified template selector replacing the multi-dropdown approach.
@@ -8,6 +8,18 @@ export default function TemplateSelector({ templates, currentTemplate, onSelect 
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [filterPlatform, setFilterPlatform] = useState('');
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
 
   // Build display label for a template
   const label = (t) => {
@@ -71,7 +83,7 @@ export default function TemplateSelector({ templates, currentTemplate, onSelect 
     t.language === currentTemplate.language;
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       {/* Current selection button */}
       <button
         onClick={() => setOpen(!open)}

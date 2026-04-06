@@ -35,7 +35,7 @@ export function renderDtsTemplate(engine, templateObj, data) {
   const rendered = renderTemplate(engine, templateStr, data);
   try {
     return JSON.parse(rendered);
-  } catch {
-    return null;
+  } catch (err) {
+    throw new Error(`Template rendered to invalid JSON: ${err.message}\n\nRendered output:\n${rendered.substring(0, 500)}`);
   }
 }

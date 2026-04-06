@@ -26,7 +26,13 @@ export default function ConfigEditor({ config }) {
     );
   }
 
-  if (!config.schema) return null;
+  if (!config.schema) {
+    return (
+      <div className="flex items-center justify-center h-full text-gray-500">
+        Connect to PoracleNG to edit configuration.
+      </div>
+    );
+  }
 
   const activeSchemaSection = config.schema.find((s) => s.name === config.activeSection);
 

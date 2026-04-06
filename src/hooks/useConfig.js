@@ -25,15 +25,15 @@ export function useConfig(apiClient) {
       setSchema(sections);
       setValues(valuesRes.values || {});
       setOriginalValues(JSON.parse(JSON.stringify(valuesRes.values || {})));
-      if (sections.length > 0 && !activeSection) {
-        setActiveSection(sections[0].name);
+      if (sections.length > 0) {
+        setActiveSection((prev) => prev || sections[0].name);
       }
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [apiClient, activeSection]);
+  }, [apiClient]);
 
   // Update a single field value
   const updateField = useCallback((section, field, value) => {
