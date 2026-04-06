@@ -90,12 +90,6 @@ export function useInsertAtCursor() {
     const el = activeElementRef.current;
     if (!el) return false;
 
-    // Use the native input setter to trigger React's onChange
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype,
-      'value'
-    ).set;
-
     const start = el.selectionStart ?? cursorPosRef.current;
     const end = el.selectionEnd ?? start;
     const braceContext = insideHandlebars(el.value, start);
@@ -103,21 +97,17 @@ export function useInsertAtCursor() {
     // If cursor is inside {{ }} or {{{ }}}, insert just the field name
     const insertText = braceContext ? stripBraces(text) : text;
 
-    // Replace selected text (or insert at cursor if no selection)
-    const before = el.value.substring(0, start);
-    const after = el.value.substring(end);
-    const newValue = before + insertText + after;
+    // Focus and set selection so execCommand operates on the right range
+    el.focus();
+    el.setSelectionRange(start, end);
 
-    nativeInputValueSetter.call(el, newValue);
-    el.dispatchEvent(new Event('input', { bubbles: true }));
+    // Use execCommand('insertText') to preserve the browser's native undo stack.
+    // This inserts text as if the user typed it — Cmd+Z works naturally.
+    document.execCommand('insertText', false, insertText);
 
-    // Restore focus and set cursor after inserted text
+    // Update cursor tracking
     const newPos = start + insertText.length;
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(newPos, newPos);
-      cursorPosRef.current = newPos;
-    });
+    cursorPosRef.current = newPos;
 
     return true;
   }, []);
