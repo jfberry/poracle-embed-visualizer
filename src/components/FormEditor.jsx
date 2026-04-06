@@ -1,4 +1,5 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
+import FormatToolbar from './FormatToolbar';
 
 const inputClass =
   'w-full bg-gray-800 text-gray-200 border border-gray-600 rounded px-2 py-1 text-sm font-mono focus:outline-none focus:border-blue-500';
@@ -14,6 +15,7 @@ function Section({ title, children }) {
 }
 
 export default function FormEditor({ template, onChange }) {
+  const formRef = useRef(null);
   const embed = template?.embed || {};
 
   const updateEmbed = useCallback(
@@ -81,7 +83,7 @@ export default function FormEditor({ template, onChange }) {
   }, [template, embed, fields, onChange]);
 
   return (
-    <div className="p-3 space-y-3">
+    <div ref={formRef} className="p-3 space-y-3">
       {/* Color */}
       <div>
         <label className={labelClass}>Color</label>
@@ -117,7 +119,10 @@ export default function FormEditor({ template, onChange }) {
 
       {/* Title */}
       <div>
-        <label className={labelClass}>Title</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs text-gray-400">Title</label>
+          <FormatToolbar targetRef={formRef} />
+        </div>
         <input
           className={inputClass}
           value={embed.title ?? ''}
@@ -139,7 +144,10 @@ export default function FormEditor({ template, onChange }) {
 
       {/* Description */}
       <div>
-        <label className={labelClass}>Description</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs text-gray-400">Description</label>
+          <FormatToolbar targetRef={formRef} />
+        </div>
         <textarea
           className={inputClass + ' min-h-[80px] resize-y'}
           value={embed.description ?? ''}
@@ -172,7 +180,10 @@ export default function FormEditor({ template, onChange }) {
               />
             </div>
             <div>
-              <label className={labelClass}>Value</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs text-gray-400">Value</label>
+                <FormatToolbar targetRef={formRef} />
+              </div>
               <textarea
                 className={inputClass + ' min-h-[40px] resize-y'}
                 value={field.value ?? ''}
