@@ -163,11 +163,55 @@ export function useDts() {
     }
   }, []);
 
+  // Import entries into the current template set (merge, don't replace)
+  const importTemplates = useCallback((entries) => {
+    const normalized = entries.map((e) => ({
+      ...e,
+      id: String(e.id ?? '1'),
+      platform: e.platform || 'discord',
+      language: e.language || 'en',
+    }));
+
+    setTemplates((prev) => {
+      const merged = [...prev];
+      for (const entry of normalized) {
+        const idx = merged.findIndex(
+          (t) =>
+            t.type === entry.type &&
+            t.platform === entry.platform &&
+            t.language === entry.language &&
+            String(t.id) === String(entry.id)
+        );
+        if (idx >= 0) {
+          merged[idx] = entry; // Replace existing
+        } else {
+          merged.push(entry); // Add new
+        }
+      }
+      return merged;
+    });
+
+    // Select the first imported entry
+    if (normalized.length > 0) {
+      const first = normalized[0];
+      setFilters({
+        type: first.type,
+        platform: first.platform,
+        language: first.language,
+        id: first.id,
+      });
+      const scenarios = getTestScenarioNames(first.type);
+      if (scenarios.length > 0) {
+        setTestScenario(scenarios[0]);
+      }
+    }
+  }, []);
+
   return {
     templates, filters, setFilters: setFiltersWithAutoId,
     currentTemplate, currentTestData,
     testScenario, setTestScenario,
     availableTypes, availableIds, availableLanguages, availableScenarios,
-    updateTemplate, loadTemplates, selectTemplate,
+    updateTemplate, loadTemplates, importTemplates, selectTemplate,
   };
 }

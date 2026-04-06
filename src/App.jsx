@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import ConnectScreen from './components/ConnectScreen';
 import TopBar from './components/TopBar';
 import TemplateEditor from './components/TemplateEditor';
 import TagPicker from './components/TagPicker';
@@ -22,6 +23,7 @@ export default function App() {
   const [apiFields, setApiFields] = useState(null);
   const [apiTestScenarios, setApiTestScenarios] = useState(null);
   const [partials, setPartialsState] = useState(null);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   // DTS template types → testdata webhook types
   const dtsToWebhookType = {
@@ -83,7 +85,6 @@ export default function App() {
       } catch (err) {
         console.error('Failed to load templates:', err);
       }
-      // Fetch and register Handlebars partials
       try {
         const result = await client.getPartials();
         if (result.partials) {
@@ -107,7 +108,7 @@ export default function App() {
     } catch (err) {
       console.error('Enrich failed:', err);
     }
-  }, [api.client, dts.filters.type, activeTestData]);
+  }, [api.client, dts.filters.type, dts.filters.language, activeTestData]);
 
   const handleSendTest = useCallback(async (targetId) => {
     if (!api.client || !dts.currentTemplate?.template) return;
@@ -120,16 +121,15 @@ export default function App() {
   }, [api.client, dts.currentTemplate, activeTestData, dts.filters.language, dts.filters.platform]);
 
   const handleInsertTag = useCallback((tag) => {
-    // Try to insert at cursor in the active form field
     const inserted = insertAtCursor(tag);
     if (!inserted) {
-      // Fallback: copy to clipboard
       navigator.clipboard?.writeText(tag).catch(() => {});
     }
     return inserted;
   }, [insertAtCursor]);
 
-  const handleLoadFile = () => {
+  // Import a single template entry from a local file
+  const handleImport = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -141,7 +141,20 @@ export default function App() {
         try {
           const parsed = JSON.parse(ev.target.result);
           const entries = Array.isArray(parsed) ? parsed : [parsed];
-          dts.loadTemplates(entries);
+          // Find entries that look like DTS entries (have type + template)
+          const valid = entries.filter((e) => e.type && (e.template || e.templateFile));
+          if (valid.length === 0) {
+            alert('No valid DTS template entries found in file');
+            return;
+          }
+          if (api.connected) {
+            // Merge into current template set
+            dts.importTemplates(valid);
+          } else {
+            // Offline mode — load as the full set
+            dts.loadTemplates(valid);
+            setOfflineMode(true);
+          }
         } catch (err) {
           alert('Invalid JSON file: ' + err.message);
         }
@@ -151,44 +164,59 @@ export default function App() {
     input.click();
   };
 
-  const handleSave = async () => {
-    if (api.connected && api.client) {
-      if (!dts.currentTemplate) {
-        alert('No template selected');
-        return;
-      }
-      try {
-        // Save only the current template, not all templates
-        const entry = {
-          id: String(dts.currentTemplate.id || ''),
-          type: dts.currentTemplate.type,
-          platform: dts.currentTemplate.platform,
-          language: dts.currentTemplate.language || '',
-          template: dts.currentTemplate.template,
-        };
-        if (dts.currentTemplate.name) entry.name = dts.currentTemplate.name;
-        if (dts.currentTemplate.description) entry.description = dts.currentTemplate.description;
-        if (dts.currentTemplate.default) entry.default = true;
-
-        const result = await api.client.saveTemplates([entry]);
-        alert(`Saved to PoracleNG (${result.saved || 0} template${result.saved !== 1 ? 's' : ''})`);
-      } catch (err) {
-        alert('Failed to save to PoracleNG: ' + err.message);
-      }
-    } else {
-      handleDownload();
+  // Export current template as a single JSON entry
+  const handleExport = () => {
+    if (!dts.currentTemplate) {
+      alert('No template selected');
+      return;
     }
-  };
-
-  const handleDownload = () => {
-    const blob = new Blob([JSON.stringify(dts.templates, null, 2)], { type: 'application/json' });
+    const entry = { ...dts.currentTemplate };
+    delete entry.readonly; // Don't export readonly flag
+    const blob = new Blob([JSON.stringify(entry, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'dts.json';
+    a.download = `${entry.type}-${entry.id || 'default'}-${entry.platform || 'discord'}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  // Save current template to PoracleNG
+  const handleSave = async () => {
+    if (!api.connected || !api.client) return;
+    if (!dts.currentTemplate) {
+      alert('No template selected');
+      return;
+    }
+    try {
+      const entry = {
+        id: String(dts.currentTemplate.id || ''),
+        type: dts.currentTemplate.type,
+        platform: dts.currentTemplate.platform,
+        language: dts.currentTemplate.language || '',
+        template: dts.currentTemplate.template,
+      };
+      if (dts.currentTemplate.name) entry.name = dts.currentTemplate.name;
+      if (dts.currentTemplate.description) entry.description = dts.currentTemplate.description;
+      if (dts.currentTemplate.default) entry.default = true;
+
+      const result = await api.client.saveTemplates([entry]);
+      alert(`Saved to PoracleNG (${result.saved || 0} template${result.saved !== 1 ? 's' : ''})`);
+    } catch (err) {
+      alert('Failed to save: ' + err.message);
+    }
+  };
+
+  // Show connect screen if not connected and not in offline mode
+  if (!api.connected && !offlineMode) {
+    return (
+      <ConnectScreen
+        onConnect={handleConnect}
+        onImportFile={handleImport}
+        error={api.error}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-gray-200">
@@ -196,7 +224,9 @@ export default function App() {
         templates={dts.templates}
         currentTemplate={dts.currentTemplate}
         onSelectTemplate={dts.selectTemplate}
-        onLoadFile={handleLoadFile} onSave={handleSave} onDownload={handleDownload}
+        onImport={handleImport}
+        onExport={handleExport}
+        onSave={api.connected ? handleSave : null}
         connected={api.connected}
         showMiddle={showMiddle} onToggleMiddle={() => setShowMiddle((v) => !v)}
         sendTestButton={api.connected && <SendTestButton onSend={handleSendTest} />} />
@@ -253,7 +283,8 @@ export default function App() {
         </div>
       </div>
       <StatusBar connected={api.connected} url={api.url} testScenario={dts.testScenario}
-        error={renderError || api.error} onConnect={handleConnect} onDisconnect={api.disconnect} />
+        error={renderError || api.error}
+        onConnect={handleConnect} onDisconnect={() => { api.disconnect(); setOfflineMode(false); }} />
     </div>
   );
 }
