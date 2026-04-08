@@ -298,7 +298,7 @@ export default function FormEditor({ template, onChange }) {
           className={inputClass}
           value={embed.timestamp ?? ''}
           onChange={(e) => updateEmbed('timestamp', e.target.value)}
-          placeholder="e.g. {{timestamp}} or ISO string"
+          placeholder="e.g. {{nowISO}} or ISO 8601 string"
         />
       </div>
     </div>
