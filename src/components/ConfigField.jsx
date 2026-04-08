@@ -99,45 +99,40 @@ function ResolvableStringField({ value, onChange, resolve, resolveIds, placehold
 
   return (
     <div>
+      {resolved && (
+        <div className="mb-1 inline-flex items-start gap-1 bg-gray-800 border border-gray-600 rounded px-2 py-0.5 text-xs">
+          {resolved.stale && (
+            <span
+              className="text-amber-400"
+              title="This destination is registered but no longer exists on the platform — alerts will not be delivered"
+            >
+              ⚠️
+            </span>
+          )}
+          {icon && <span className="text-gray-400">{icon}</span>}
+          <div>
+            <span className="text-gray-200">
+              {resolved.name || resolved.globalName || value}
+            </span>
+            {resolved.guild && <span className="text-gray-500 text-[10px] ml-1">({resolved.guild})</span>}
+            {resolved.enabled === false && <span className="text-amber-500 text-[10px] ml-1">(disabled)</span>}
+            {resolved.notes && (
+              <span className="block text-[10px] text-gray-500 italic">{resolved.notes}</span>
+            )}
+            {resolved.stale && (
+              <span className="block text-[10px] text-amber-400">
+                Registered but unreachable on the platform
+              </span>
+            )}
+          </div>
+        </div>
+      )}
       <input
         className={inputClass}
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
       />
-      {resolved && (
-        <div className="mt-0.5 flex items-start gap-1.5">
-          {resolved.stale && (
-            <span
-              className="text-[11px] text-amber-400"
-              title="This destination is registered but no longer exists on the platform — alerts will not be delivered"
-            >
-              ⚠️
-            </span>
-          )}
-          <div className="flex-1">
-            <p className="text-[10px] text-teal-400">
-              {icon && <span className="text-gray-400 mr-0.5">{icon}</span>}
-              {resolved.name || resolved.globalName || value}
-              {resolved.guild && <span className="text-gray-500 ml-1">({resolved.guild})</span>}
-              {resolved.kind && (
-                <span className="text-gray-600 ml-1">[{resolved.kind}]</span>
-              )}
-              {resolved.enabled === false && (
-                <span className="text-amber-500 ml-1">(disabled)</span>
-              )}
-            </p>
-            {resolved.notes && (
-              <p className="text-[10px] text-gray-500 italic">{resolved.notes}</p>
-            )}
-            {resolved.stale && (
-              <p className="text-[10px] text-amber-400">
-                Registered but unreachable on the platform
-              </p>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
