@@ -229,7 +229,10 @@ const baseRules = {
     }
   },
   missingEmoji: {
-    order: SimpleMarkdown.defaultRules.text.order,
+    // Higher priority than text/emoji so the sentinel is recognised even
+    // when embedded mid-string (the default text rule would otherwise
+    // consume ⟦ as part of a regular Unicode run)
+    order: SimpleMarkdown.defaultRules.url.order,
     match(source) {
       return /^⟦([^⟧]+)⟧/.exec(source);
     },
