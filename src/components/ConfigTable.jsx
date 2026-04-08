@@ -93,6 +93,7 @@ export default function ConfigTable({ table, value, onChange, resolveIds, geofen
                     value={fieldValue}
                     onChange={(v) => updateEntry(index, field.name, v)}
                     isDirty={false}
+                    resolveIds={resolveIds}
                   />
                 );
               })}

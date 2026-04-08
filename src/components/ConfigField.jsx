@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { inputClass } from '../lib/styles';
 
 function ResolvedLabel({ id, resolved }) {
@@ -20,6 +20,61 @@ function StringField({ value, onChange, placeholder }) {
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
     />
+  );
+}
+
+// String field with ID resolution (for fields with resolve hint)
+function ResolvableStringField({ value, onChange, resolve, resolveIds, placeholder }) {
+  const [resolved, setResolved] = useState(null);
+
+  useEffect(() => {
+    if (!value || !resolve || !resolveIds) {
+      setResolved(null);
+      return;
+    }
+    let cancelled = false;
+    const [platform, type] = resolve.split(':');
+    let request;
+    if (platform === 'discord') {
+      if (type === 'user|role') request = { discord: { users: [value], roles: [value] } };
+      else if (type === 'target') request = { discord: { users: [value], channels: [value] } };
+      else request = { discord: { [type + 's']: [value] } };
+    } else if (platform === 'telegram') {
+      request = { telegram: { chats: [value] } };
+    }
+    if (!request) return;
+    resolveIds(request).then((result) => {
+      if (cancelled) return;
+      let found = null;
+      const platformResult = result[platform];
+      if (platformResult) {
+        for (const typeMap of Object.values(platformResult)) {
+          if (typeMap[value]) {
+            found = typeMap[value];
+            break;
+          }
+        }
+      }
+      setResolved(found);
+    });
+    return () => { cancelled = true; };
+  }, [value, resolve, resolveIds]);
+
+  return (
+    <div>
+      <input
+        className={inputClass}
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      {resolved && (
+        <p className="text-[10px] text-teal-400 mt-0.5">
+          → {resolved.name || resolved.globalName || value}
+          {resolved.guild && <span className="text-gray-500 ml-1">({resolved.guild})</span>}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -177,8 +232,8 @@ function MapField({ value, onChange }) {
   );
 }
 
-export default function ConfigField({ field, value, onChange, isDirty, defaultValue, originalValue, onReset, onClearOverride, isOverridden: isOverriddenBadge }) {
-  const { name, type, description, hotReload, sensitive, options } = field;
+export default function ConfigField({ field, value, onChange, isDirty, defaultValue, originalValue, onReset, onClearOverride, isOverridden: isOverriddenBadge, resolveIds }) {
+  const { name, type, description, hotReload, sensitive, options, resolve } = field;
 
   const isOverridden = JSON.stringify(originalValue) !== JSON.stringify(defaultValue);
 
@@ -232,6 +287,8 @@ export default function ConfigField({ field, value, onChange, isDirty, defaultVa
         <NumberField value={value} onChange={onChange} isFloat={true} />
       ) : type === 'map' ? (
         <MapField value={value} onChange={onChange} />
+      ) : resolve ? (
+        <ResolvableStringField value={value} onChange={onChange} resolve={resolve} resolveIds={resolveIds} />
       ) : (
         <StringField value={value} onChange={onChange} />
       )}

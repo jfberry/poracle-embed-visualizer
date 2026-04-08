@@ -131,6 +131,7 @@ export default function ConfigSection({
               onReset={() => onUpdateField(section.name, field.name, sectionOriginal[field.name])}
               onClearOverride={() => onUpdateField(section.name, field.name, field.default)}
               isOverridden={isOverridden(field.name)}
+              resolveIds={resolveIds}
             />
           );
         })}
