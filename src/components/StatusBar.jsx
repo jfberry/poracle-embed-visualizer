@@ -37,6 +37,9 @@ export default function StatusBar({ connected, url, testScenario, error, configD
           <span className="text-blue-400">{configDirtyCount} unsaved config change{configDirtyCount !== 1 ? 's' : ''}</span>
         )}
         {testScenario && <span className="text-yellow-300">Test: {testScenario}</span>}
+        <span className="text-gray-600" title={__APP_COMMIT__ ? `commit ${__APP_COMMIT__}` : undefined}>
+          v{__APP_VERSION__}{__APP_COMMIT__ && ` · ${__APP_COMMIT__}`}
+        </span>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
   "name": "poracle-config",
   "author": "leovoel",
   "license": "MIT",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "homepage": "https://jfberry.github.io/poracle-config/",
@@ -11,7 +11,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "capture-test-data": "node scripts/capture-test-data.mjs"
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.2",
