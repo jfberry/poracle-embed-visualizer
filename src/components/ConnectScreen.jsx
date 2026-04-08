@@ -23,6 +23,9 @@ export default function ConnectScreen({ onConnect, onImportFile, error }) {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-blue-400">Poracle Config</h1>
           <p className="text-gray-400 text-sm">Connect to your PoracleNG instance to edit templates and configuration</p>
+          <p className="text-gray-600 text-[10px]" title={__APP_COMMIT__ ? `commit ${__APP_COMMIT__}` : undefined}>
+            v{__APP_VERSION__}{__APP_COMMIT__ && ` · ${__APP_COMMIT__}`}
+          </p>
         </div>
 
         <div className="space-y-3">
