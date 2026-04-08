@@ -62,27 +62,25 @@ export default function TestDataPanel({
         {hasApiScenarios && (
           <div>
             <label className="text-[10px] text-gray-500 uppercase block mb-0.5">API Test Scenarios</label>
-            <div className="flex gap-1">
-              <select
-                onChange={(e) => handleApiScenarioSelect(e.target.value)}
-                defaultValue=""
-                className="flex-1 bg-gray-800 text-gray-200 text-xs rounded px-2 py-1 border border-gray-600"
+            <select
+              onChange={(e) => handleApiScenarioSelect(e.target.value)}
+              defaultValue=""
+              className="w-full bg-gray-800 text-gray-200 text-xs rounded px-2 py-1 border border-gray-600 mb-1"
+            >
+              <option value="" disabled>Select scenario...</option>
+              {apiScenarios.map((s) => (
+                <option key={s.test} value={s.test}>{s.test}</option>
+              ))}
+            </select>
+            {onEnrich && (
+              <button
+                onClick={handleEnrich}
+                disabled={enriching}
+                className="w-full text-xs py-1 bg-blue-900/30 text-blue-300 border border-blue-700 rounded hover:bg-blue-900/50 disabled:opacity-50"
               >
-                <option value="" disabled>Select scenario...</option>
-                {apiScenarios.map((s) => (
-                  <option key={s.test} value={s.test}>{s.test}</option>
-                ))}
-              </select>
-              {onEnrich && (
-                <button
-                  onClick={handleEnrich}
-                  disabled={enriching}
-                  className="text-xs px-2 py-1 bg-blue-900/30 text-blue-300 border border-blue-700 rounded hover:bg-blue-900/50 disabled:opacity-50 shrink-0"
-                >
-                  {enriching ? '...' : 'Enrich'}
-                </button>
-              )}
-            </div>
+                {enriching ? 'Enriching...' : 'Enrich via PoracleNG'}
+              </button>
+            )}
           </div>
         )}
 
@@ -117,16 +115,16 @@ export default function TestDataPanel({
       )}
 
       {/* Mode indicator */}
-      <div className="px-2 py-1 border-b border-gray-700 shrink-0 flex gap-2">
+      <div className="px-2 py-1 border-b border-gray-700 shrink-0 flex gap-2 text-[10px] whitespace-nowrap">
         <button
           onClick={() => setMode('enriched')}
-          className={`text-[10px] ${mode === 'enriched' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}
+          className={mode === 'enriched' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}
         >
-          Enriched Data
+          Enriched
         </button>
         <button
           onClick={() => setMode('webhook')}
-          className={`text-[10px] ${mode === 'webhook' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}`}
+          className={mode === 'webhook' ? 'text-blue-400' : 'text-gray-500 hover:text-gray-300'}
         >
           Raw Webhook
         </button>
