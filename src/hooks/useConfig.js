@@ -8,6 +8,9 @@ export function useConfig(apiClient) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [saveResult, setSaveResult] = useState(null);
+  const [geofenceAreas, setGeofenceAreas] = useState([]);
+  const [overriddenFields, setOverriddenFields] = useState(new Set());
+  const [validationIssues, setValidationIssues] = useState([]);
   const resolveCache = useRef(new Map());
 
   // Fetch schema and values
@@ -25,8 +28,21 @@ export function useConfig(apiClient) {
       setSchema(sections);
       setValues(valuesRes.values || {});
       setOriginalValues(JSON.parse(JSON.stringify(valuesRes.values || {})));
+      setOverriddenFields(new Set(valuesRes.overridden || []));
       if (sections.length > 0) {
         setActiveSection((prev) => prev || sections[0].name);
+      }
+      try {
+        const geo = await apiClient.getGeofenceAll();
+        const areas = Array.isArray(geo)
+          ? geo
+          : (geo.geofences || geo.areas || geo.geofence || []);
+        const names = areas
+          .map((a) => (typeof a === 'string' ? a : (a?.name || a?.id)))
+          .filter(Boolean);
+        setGeofenceAreas(names);
+      } catch {
+        setGeofenceAreas([]);
       }
     } catch (err) {
       setError(err.message);
@@ -81,6 +97,28 @@ export function useConfig(apiClient) {
     return { required: fields.length > 0, fields };
   }, [schema, dirtyFields]);
 
+  // Debounced server-side validation of dirty fields
+  useEffect(() => {
+    if (!apiClient || dirtyFields.count === 0) {
+      setValidationIssues([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const result = await apiClient.validateConfig(dirtyFields.dirty);
+        setValidationIssues(result.issues || []);
+      } catch {
+        // Silent
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [apiClient, dirtyFields]);
+
+  const hasValidationErrors = useMemo(
+    () => validationIssues.some((i) => i.severity === 'error'),
+    [validationIssues]
+  );
+
   // Which sections have dirty fields (for sidebar dots)
   const dirtySections = useMemo(() => {
     return new Set(Object.keys(dirtyFields.dirty));
@@ -102,13 +140,22 @@ export function useConfig(apiClient) {
     }
   }, [apiClient, dirtyFields, values]);
 
+  // Migrate config.toml to overrides.json
+  const migrate = useCallback(async () => {
+    if (!apiClient) throw new Error('Not connected');
+    const result = await apiClient.migrateConfig();
+    await load();
+    return result;
+  }, [apiClient, load]);
+
   // Resolve IDs — batch resolve and cache
   const resolveIds = useCallback(async (request) => {
     if (!apiClient) return {};
 
     // Check cache and filter out already-resolved IDs
     const uncached = { discord: {}, telegram: {} };
-    const fromCache = { discord: {}, telegram: {} };
+    const uncachedDestinations = [];
+    const fromCache = { discord: {}, telegram: {}, destinations: {} };
     let needsFetch = false;
 
     if (request.discord) {
@@ -147,6 +194,21 @@ export function useConfig(apiClient) {
       if (Object.keys(uncached.telegram).length === 0) delete uncached.telegram;
     }
 
+    if (Array.isArray(request.destinations)) {
+      for (const id of request.destinations) {
+        const cacheKey = `destination:${id}`;
+        if (resolveCache.current.has(cacheKey)) {
+          fromCache.destinations[id] = resolveCache.current.get(cacheKey);
+        } else {
+          uncachedDestinations.push(id);
+          needsFetch = true;
+        }
+      }
+      if (uncachedDestinations.length > 0) {
+        uncached.destinations = uncachedDestinations;
+      }
+    }
+
     // Fetch uncached
     let fetched = {};
     if (needsFetch) {
@@ -167,13 +229,18 @@ export function useConfig(apiClient) {
             }
           }
         }
+        if (fetched.destinations) {
+          for (const [id, data] of Object.entries(fetched.destinations)) {
+            resolveCache.current.set(`destination:${id}`, data);
+          }
+        }
       } catch {
         // Resolution failure is not critical
       }
     }
 
     // Merge cached + fetched
-    const result = { discord: {}, telegram: {} };
+    const result = { discord: {}, telegram: {}, destinations: {} };
     for (const platform of ['discord', 'telegram']) {
       for (const type of Object.keys(fromCache[platform] || {})) {
         result[platform][type] = { ...fromCache[platform][type] };
@@ -182,6 +249,7 @@ export function useConfig(apiClient) {
         result[platform][type] = { ...result[platform][type], ...fetched[platform][type] };
       }
     }
+    result.destinations = { ...fromCache.destinations, ...(fetched.destinations || {}) };
     return result;
   }, [apiClient]);
 
@@ -201,5 +269,10 @@ export function useConfig(apiClient) {
     restartRequired,
     save,
     resolveIds,
+    geofenceAreas,
+    overriddenFields,
+    migrate,
+    validationIssues,
+    hasValidationErrors,
   };
 }

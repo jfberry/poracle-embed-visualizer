@@ -1,7 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import Moment from 'moment';
 import Embed from './embed';
 import { parse, parseAllowLinks, jumboify } from './markdown';
+
+const shortTime = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: 'numeric' });
+
+// Discord-style "Today at 2:30 PM" / "Yesterday at 2:30 PM" / "M/D/YYYY"
+function formatCalendar(date) {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfYesterday = new Date(startOfToday.getTime() - 86400000);
+  const startOfTomorrow = new Date(startOfToday.getTime() + 86400000);
+  const time = shortTime.format(date);
+  if (date >= startOfToday && date < startOfTomorrow) return `Today at ${time}`;
+  if (date >= startOfYesterday && date < startOfToday) return `Yesterday at ${time}`;
+  return date.toLocaleDateString();
+}
 
 function MessageTimestamp({ compactMode = false }) {
   const [, setTick] = useState(0);
@@ -11,8 +24,8 @@ function MessageTimestamp({ compactMode = false }) {
     return () => clearInterval(timer);
   }, []);
 
-  const m = Moment();
-  const computed = compactMode ? m.format('LT') : m.calendar();
+  const now = new Date();
+  const computed = compactMode ? shortTime.format(now) : formatCalendar(now);
   return <span className="timestamp">{computed}</span>;
 }
 
