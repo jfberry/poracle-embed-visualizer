@@ -102,7 +102,7 @@ export function useInsertAtCursor() {
 
   const insertAtCursor = useCallback((text) => {
     const el = activeElementRef.current;
-    if (!el) return false;
+    if (!el || !document.body.contains(el)) return false;
 
     const start = el.selectionStart ?? cursorPosRef.current;
     const end = el.selectionEnd ?? start;
