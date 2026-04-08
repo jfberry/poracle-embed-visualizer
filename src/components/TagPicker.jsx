@@ -49,7 +49,7 @@ const iterableFieldNames = ['pvpGreat', 'pvpUltra', 'pvpLittle', 'matched', 'wea
 // breaks document.execCommand('insertText') in useInsertAtCursor.
 const noFocusSteal = (e) => e.preventDefault();
 
-export default function TagPicker({ type, onInsertTag, apiFields, blockContext, partials, emojis }) {
+export default function TagPicker({ type, onInsertTag, apiFields, apiBlockScopes, blockContext, partials, emojis }) {
   const [expandedPartial, setExpandedPartial] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
   const [showDeprecated, setShowDeprecated] = useState(false);
@@ -76,16 +76,40 @@ export default function TagPicker({ type, onInsertTag, apiFields, blockContext, 
     return groups;
   }, [allFields, showRaw, showDeprecated]);
 
-  // Get block scope fields when cursor is inside a block helper
+  // Build a flat lookup of block scopes from the API response (if available).
+  // The API returns blockScopes as [{helper, arg?, fields, iterableFields?}, ...].
+  // For each {{#each X}}-style entry, the per-iterable-field scopes are stored
+  // under iterableFields[]. For named helpers (pokemon, getPowerUpCost), the
+  // scope is stored under helper.
+  const apiScopeLookup = useMemo(() => {
+    if (!apiBlockScopes || !Array.isArray(apiBlockScopes)) return null;
+    const lookup = {};
+    for (const entry of apiBlockScopes) {
+      const fields = entry.fields || [];
+      if (entry.helper === 'each' || entry.helper === 'forEach') {
+        // Each iterable field name gets the same scope
+        for (const name of entry.iterableFields || []) {
+          lookup[name] = fields;
+        }
+      } else if (entry.helper) {
+        // Named helper like 'pokemon' or 'getPowerUpCost'
+        lookup[entry.helper] = fields;
+      }
+    }
+    return lookup;
+  }, [apiBlockScopes]);
+
+  // Get block scope fields when cursor is inside a block helper.
+  // Prefer the API-supplied scopes; fall back to the static definitions.
   const scopeFields = useMemo(() => {
     if (!blockContext) return null;
-    // For {{#each X}} blocks, look up the scope for X
-    if (blockContext.helper === 'each' || blockContext.helper === 'forEach') {
-      return getBlockScope(blockContext.arg);
-    }
-    // For named block helpers like {{#pokemon}} or {{#getPowerUpCost}}
-    return getBlockScope(blockContext.helper);
-  }, [blockContext]);
+    const key =
+      blockContext.helper === 'each' || blockContext.helper === 'forEach'
+        ? blockContext.arg
+        : blockContext.helper;
+    if (apiScopeLookup && apiScopeLookup[key]) return apiScopeLookup[key];
+    return getBlockScope(key);
+  }, [blockContext, apiScopeLookup]);
 
   // Find iterable fields in current type for "insert block" section
   const iterableFields = useMemo(() => {

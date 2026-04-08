@@ -57,6 +57,7 @@ export default function App() {
   const [showMiddle, setShowMiddle] = useState(true);
   const [customTestData, setCustomTestData] = useState(null);
   const [apiFields, setApiFields] = useState(null);
+  const [apiBlockScopes, setApiBlockScopes] = useState(null);
   const [apiTestScenarios, setApiTestScenarios] = useState(null);
   const [partials, setPartialsState] = useState(null);
   const [emojis, setEmojisState] = useState({ discord: {}, telegram: {} });
@@ -94,13 +95,22 @@ export default function App() {
   useEffect(() => {
     if (!api.connected || !api.client) {
       setApiFields(null);
+      setApiBlockScopes(null);
       setApiTestScenarios(null);
       return;
     }
     let cancelled = false;
     api.client.getFields(dts.filters.type)
-      .then((result) => { if (!cancelled) setApiFields(result.fields || null); })
-      .catch(() => { if (!cancelled) setApiFields(null); });
+      .then((result) => {
+        if (cancelled) return;
+        setApiFields(result.fields || null);
+        setApiBlockScopes(result.blockScopes || null);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setApiFields(null);
+        setApiBlockScopes(null);
+      });
     const webhookType = dtsToWebhookType[dts.filters.type] || dts.filters.type;
     api.client.getTestdata(webhookType)
       .then((result) => { if (!cancelled) setApiTestScenarios(result.testdata || null); })
@@ -362,6 +372,7 @@ export default function App() {
                       type={dts.filters.type}
                       onInsertTag={handleInsertTag}
                       apiFields={apiFields}
+                      apiBlockScopes={apiBlockScopes}
                       blockContext={blockContext}
                       partials={partials}
                       emojis={emojis[dts.filters.platform] || {}}
