@@ -1,12 +1,31 @@
 import { useState, useEffect } from 'react';
 import { inputClass } from '../lib/styles';
 
+// Map kind → display icon
+const KIND_ICONS = {
+  'discord:channel': '#',
+  'discord:user': '@',
+  'discord:role': '@',
+  'discord:guild': '🏠',
+  'telegram:user': '@',
+  'telegram:channel': '#',
+  'telegram:group': '👥',
+  'telegram:chat': '💬',
+  'webhook': '🔗',
+};
+
 function ResolvedLabel({ id, resolved }) {
   if (!resolved) return <span className="font-mono">{id}</span>;
+  const icon = resolved.kind ? KIND_ICONS[resolved.kind] : null;
   return (
     <span>
+      {resolved.stale && (
+        <span className="text-amber-400 mr-0.5" title="Registered but unreachable on the platform">⚠️</span>
+      )}
+      {icon && <span className="text-gray-400 mr-0.5">{icon}</span>}
       <span className="text-gray-200">{resolved.name || resolved.globalName || id}</span>
       {resolved.guild && <span className="text-gray-500 text-[10px] ml-1">({resolved.guild})</span>}
+      {resolved.enabled === false && <span className="text-amber-500 text-[10px] ml-1">(disabled)</span>}
       <span className="block text-[10px] text-gray-500 font-mono">{id}</span>
     </span>
   );
@@ -22,19 +41,6 @@ function StringField({ value, onChange, placeholder }) {
     />
   );
 }
-
-// Map kind → display icon
-const KIND_ICONS = {
-  'discord:channel': '#',
-  'discord:user': '@',
-  'discord:role': '@',
-  'discord:guild': '🏠',
-  'telegram:user': '@',
-  'telegram:channel': '#',
-  'telegram:group': '👥',
-  'telegram:chat': '💬',
-  'webhook': '🔗',
-};
 
 // String field with ID resolution (for fields with resolve hint)
 function ResolvableStringField({ value, onChange, resolve, resolveIds, placeholder }) {

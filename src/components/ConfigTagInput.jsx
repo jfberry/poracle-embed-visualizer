@@ -114,6 +114,10 @@ export default function ConfigTagInput({ value, onChange, resolve, resolveIds, f
 function buildResolveRequest(resolveHint, ids) {
   if (!resolveHint || ids.length === 0) return null;
 
+  if (resolveHint === 'destination') {
+    return { destinations: ids };
+  }
+
   // Parse hint: "discord:user", "discord:role", "discord:channel", "discord:user|role", "telegram:chat"
   const [platform, type] = resolveHint.split(':');
 
@@ -138,21 +142,38 @@ function buildResolveRequest(resolveHint, ids) {
 // Extract a flat id->resolved map from the resolve response
 function extractResolvedMap(resolveHint, result) {
   const map = {};
-  const [platform, type] = resolveHint.split(':');
+
+  if (resolveHint === 'destination') {
+    if (result.destinations) {
+      for (const [id, data] of Object.entries(result.destinations)) {
+        map[id] = data;
+      }
+    }
+    return map;
+  }
+
+  const [platform] = resolveHint.split(':');
 
   if (platform === 'discord' && result.discord) {
     // Merge all resolved types (for user|role, both users and roles are returned)
-    for (const resolved of Object.values(result.discord)) {
+    for (const [matchedType, resolved] of Object.entries(result.discord)) {
+      const singular = matchedType.endsWith('s') ? matchedType.slice(0, -1) : matchedType;
       for (const [id, data] of Object.entries(resolved)) {
-        map[id] = data;
+        // Don't overwrite if already mapped (first match wins)
+        if (!map[id]) {
+          map[id] = { ...data, kind: `discord:${singular}` };
+        }
       }
     }
   }
 
   if (platform === 'telegram' && result.telegram) {
-    for (const resolved of Object.values(result.telegram)) {
+    for (const [matchedType, resolved] of Object.entries(result.telegram)) {
+      const singular = matchedType.endsWith('s') ? matchedType.slice(0, -1) : matchedType;
       for (const [id, data] of Object.entries(resolved)) {
-        map[id] = data;
+        if (!map[id]) {
+          map[id] = { ...data, kind: `telegram:${singular}` };
+        }
       }
     }
   }
