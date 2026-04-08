@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { inputClass } from '../lib/styles';
 
 // Map kind → display icon
@@ -168,6 +168,7 @@ function BoolField({ value, onChange, label }) {
 }
 
 function SelectField({ value, onChange, options }) {
+  const radioName = useId();
   if (options.length <= 5) {
     // Radio group
     return (
@@ -176,7 +177,7 @@ function SelectField({ value, onChange, options }) {
           <label key={opt.value} className="flex items-start gap-2 cursor-pointer">
             <input
               type="radio"
-              name={`select-${options[0]?.value}`}
+              name={radioName}
               checked={String(value) === String(opt.value)}
               onChange={() => onChange(opt.value)}
               className="mt-1"
