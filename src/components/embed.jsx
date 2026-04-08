@@ -1,7 +1,15 @@
 import React from 'react';
-import Moment from 'moment';
 import { parseAllowLinks, parseEmbedTitle } from './markdown';
 import { extractRGB } from '../color';
+
+// Format a date as "Wed Apr 8, 2026 at 2:30 PM" using Intl
+const dayMonth = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+const hourMinute = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: 'numeric' });
+function formatFooterTimestamp(value) {
+  const d = value !== undefined ? new Date(value) : new Date();
+  if (isNaN(d.getTime())) return null;
+  return `${dayMonth.format(d)} at ${hourMinute.format(d)}`;
+}
 
 
 const Link = ({ children, ...props}) => {
@@ -103,9 +111,7 @@ const EmbedFooter = ({ timestamp, text, icon_url }) => {
     return null;
   }
 
-  // pass null, since undefined will make moment(...) return the current date/time
-  let time = Moment(timestamp !== undefined ? timestamp : null);
-  time = time.isValid() ? time.format('ddd MMM Do, YYYY [at] h:mm A') : null;
+  const time = formatFooterTimestamp(timestamp);
 
   const footerText = [text, time].filter(Boolean).join(' | ');
   const footerIcon = text && icon_url ? (
