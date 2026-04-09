@@ -58,6 +58,7 @@ export default function App() {
   const [customTestData, setCustomTestData] = useState(null);
   const [apiFields, setApiFields] = useState(null);
   const [apiBlockScopes, setApiBlockScopes] = useState(null);
+  const [apiSnippets, setApiSnippets] = useState(null);
   const [apiTestScenarios, setApiTestScenarios] = useState(null);
   const [partials, setPartialsState] = useState(null);
   const [emojis, setEmojisState] = useState({ discord: {}, telegram: {} });
@@ -105,11 +106,13 @@ export default function App() {
         if (cancelled) return;
         setApiFields(result.fields || null);
         setApiBlockScopes(result.blockScopes || null);
+        setApiSnippets(result.snippets || null);
       })
       .catch(() => {
         if (cancelled) return;
         setApiFields(null);
         setApiBlockScopes(null);
+        setApiSnippets(null);
       });
     const webhookType = dtsToWebhookType[dts.filters.type] || dts.filters.type;
     api.client.getTestdata(webhookType)
@@ -373,6 +376,7 @@ export default function App() {
                       onInsertTag={handleInsertTag}
                       apiFields={apiFields}
                       apiBlockScopes={apiBlockScopes}
+                      apiSnippets={apiSnippets}
                       blockContext={blockContext}
                       partials={partials}
                       emojis={emojis[dts.filters.platform] || {}}

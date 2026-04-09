@@ -49,7 +49,7 @@ const iterableFieldNames = ['pvpGreat', 'pvpUltra', 'pvpLittle', 'matched', 'wea
 // breaks document.execCommand('insertText') in useInsertAtCursor.
 const noFocusSteal = (e) => e.preventDefault();
 
-export default function TagPicker({ type, onInsertTag, apiFields, apiBlockScopes, blockContext, partials, emojis }) {
+export default function TagPicker({ type, onInsertTag, apiFields, apiBlockScopes, apiSnippets, blockContext, partials, emojis }) {
   const [expandedPartial, setExpandedPartial] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
   const [showDeprecated, setShowDeprecated] = useState(false);
@@ -262,25 +262,54 @@ export default function TagPicker({ type, onInsertTag, apiFields, apiBlockScopes
           </div>
         ))}
 
-        {/* Helpers section */}
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-wider mb-1 text-gray-500">
-            Helpers
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {helpers.map((h) => (
-              <button
-                key={h.label}
-                onMouseDown={noFocusSteal}
-                onClick={() => doInsert(h.snippet)}
-                title={`${h.desc}\n${h.snippet}`}
-                className="text-[11px] px-1.5 py-0.5 rounded cursor-pointer bg-gray-800/60 text-gray-400 border border-transparent hover:border-gray-500 transition-colors"
-              >
-                {h.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Snippets section — API-driven when connected, static fallback */}
+        {(() => {
+          const snippetList = apiSnippets && apiSnippets.length > 0 ? apiSnippets : helpers.map((h) => ({
+            label: h.label,
+            insert: h.snippet,
+            description: h.desc,
+            category: 'helpers',
+          }));
+          // Group by category
+          const grouped = {};
+          for (const s of snippetList) {
+            const cat = s.category || 'other';
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push(s);
+          }
+          const categoryColors = {
+            control: 'text-gray-400',
+            format: 'text-cyan-400',
+            string: 'text-green-400',
+            iteration: 'text-purple-400',
+            emoji: 'text-pink-400',
+            link: 'text-blue-400',
+            pokemon: 'text-yellow-400',
+            pvp: 'text-purple-300',
+            raid: 'text-red-400',
+            helpers: 'text-gray-400',
+          };
+          return Object.entries(grouped).map(([cat, items]) => (
+            <div key={cat}>
+              <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${categoryColors[cat] || 'text-gray-500'}`}>
+                {cat}
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {items.map((s, i) => (
+                  <button
+                    key={`${cat}-${i}`}
+                    onMouseDown={noFocusSteal}
+                    onClick={() => doInsert(s.insert)}
+                    title={`${s.description || s.label}\n${s.insert}`}
+                    className="text-[11px] px-1.5 py-0.5 rounded cursor-pointer bg-gray-800/60 text-gray-400 border border-transparent hover:border-gray-500 transition-colors"
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ));
+        })()}
 
         {/* Emoji section */}
         {emojis && Object.keys(emojis).length > 0 && (
