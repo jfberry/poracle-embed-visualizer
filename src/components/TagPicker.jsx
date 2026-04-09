@@ -49,7 +49,7 @@ const iterableFieldNames = ['pvpGreat', 'pvpUltra', 'pvpLittle', 'matched', 'wea
 // breaks document.execCommand('insertText') in useInsertAtCursor.
 const noFocusSteal = (e) => e.preventDefault();
 
-export default function TagPicker({ type, onInsertTag, apiFields, apiBlockScopes, apiSnippets, blockContext, partials, emojis }) {
+export default function TagPicker({ type, platform, onInsertTag, apiFields, apiBlockScopes, apiSnippets, blockContext, partials, emojis }) {
   const [expandedPartial, setExpandedPartial] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
   const [showDeprecated, setShowDeprecated] = useState(false);
@@ -277,9 +277,13 @@ export default function TagPicker({ type, onInsertTag, apiFields, apiBlockScopes
             description: h.desc,
             category: 'helpers',
           }));
+          // Filter by platform (empty = both, otherwise must match)
+          const filtered = snippetList.filter((s) =>
+            !s.platform || s.platform === platform
+          );
           // Group by category
           const grouped = {};
-          for (const s of snippetList) {
+          for (const s of filtered) {
             const cat = s.category || 'other';
             if (!grouped[cat]) grouped[cat] = [];
             grouped[cat].push(s);

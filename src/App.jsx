@@ -373,6 +373,7 @@ export default function App() {
                   {middleTab === 'tags' ? (
                     <TagPicker
                       type={dts.filters.type}
+                      platform={dts.filters.platform}
                       onInsertTag={handleInsertTag}
                       apiFields={apiFields}
                       apiBlockScopes={apiBlockScopes}
