@@ -4,7 +4,7 @@ import TelegramFormEditor from './TelegramFormEditor';
 import RawEditor from './RawEditor';
 import { tabClass } from '../lib/styles';
 
-export default function TemplateEditor({ template, onChange, platform }) {
+export default function TemplateEditor({ template, templateFileContent, onChange, onFileContentChange, platform }) {
   const [mode, setMode] = useState('form');
 
   const handleRawChange = useCallback(
@@ -19,7 +19,26 @@ export default function TemplateEditor({ template, onChange, platform }) {
     [onChange]
   );
 
+  const isTemplateFile = templateFileContent != null;
   const isTelegram = platform === 'telegram';
+
+  // For templateFile entries: raw Handlebars text editor only
+  if (isTemplateFile) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-gray-700 text-sm">
+          <span className="text-blue-400 text-xs font-medium">Template File</span>
+          <span className="text-gray-500 text-[10px]">Raw Handlebars — not structured JSON</span>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <RawEditor
+            value={templateFileContent}
+            onChange={(text) => onFileContentChange?.(text)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">

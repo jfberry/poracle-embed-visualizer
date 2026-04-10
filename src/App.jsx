@@ -131,8 +131,20 @@ export default function App() {
   const activeTestData = customTestData || dts.currentTestData;
 
   const renderedData = useMemo(() => {
-    if (!dts.currentTemplate?.template) return {};
     if (!activeTestData || Object.keys(activeTestData).length === 0) return {};
+
+    // templateFile entries — render raw Handlebars text then parse as JSON
+    if (dts.currentTemplate?.templateFileContent != null) {
+      try {
+        return render(null, activeTestData, dts.filters.platform, dts.currentTemplate.templateFileContent) || {};
+      } catch (err) {
+        console.error('Render error (templateFile):', err);
+        return {};
+      }
+    }
+
+    // Inline template entries
+    if (!dts.currentTemplate?.template) return {};
     try {
       return render(dts.currentTemplate.template, activeTestData, dts.filters.platform) || {};
     } catch (err) {
@@ -288,6 +300,20 @@ export default function App() {
       return;
     }
     try {
+      // templateFile entries — save raw content via PUT endpoint
+      if (dts.currentTemplate.templateFile && dts.currentTemplate.templateFileContent != null) {
+        await api.client.saveTemplateFile(
+          dts.currentTemplate.type,
+          dts.currentTemplate.platform,
+          String(dts.currentTemplate.id || ''),
+          dts.currentTemplate.language || '',
+          dts.currentTemplate.templateFileContent
+        );
+        alert('Template file saved to PoracleNG');
+        return;
+      }
+
+      // Inline template entries — save via POST
       const entry = {
         id: String(dts.currentTemplate.id || ''),
         type: dts.currentTemplate.type,
@@ -345,7 +371,13 @@ export default function App() {
             className="min-w-0 shrink-0"
             style={{ width: `${leftWidth}px` }}
           >
-            <TemplateEditor template={dts.currentTemplate?.template} onChange={dts.updateTemplate} platform={dts.filters.platform} />
+            <TemplateEditor
+              template={dts.currentTemplate?.template}
+              templateFileContent={dts.currentTemplate?.templateFileContent ?? null}
+              onChange={dts.updateTemplate}
+              onFileContentChange={dts.updateTemplateFileContent}
+              platform={dts.filters.platform}
+            />
           </div>
           <ResizeHandle onResize={resizeLeft} />
           {/* Middle panel — Tags / Test Data (collapsible) */}

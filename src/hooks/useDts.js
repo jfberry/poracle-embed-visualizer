@@ -99,6 +99,18 @@ export function useDts() {
     [currentTemplateIndex]
   );
 
+  const updateTemplateFileContent = useCallback(
+    (newContent) => {
+      setTemplates((prev) => {
+        if (currentTemplateIndex < 0 || currentTemplateIndex >= prev.length) return prev;
+        const updated = [...prev];
+        updated[currentTemplateIndex] = { ...updated[currentTemplateIndex], templateFileContent: newContent };
+        return updated;
+      });
+    },
+    [currentTemplateIndex]
+  );
+
   const setFiltersWithAutoId = useCallback(
     (newFilters) => {
       setFilters((prev) => {
@@ -195,6 +207,6 @@ export function useDts() {
     currentTemplate, currentTestData,
     testScenario, setTestScenario,
     availableTypes, availableIds, availableLanguages, availableScenarios,
-    updateTemplate, loadTemplates, importTemplates, selectTemplate,
+    updateTemplate, updateTemplateFileContent, loadTemplates, importTemplates, selectTemplate,
   };
 }

@@ -36,6 +36,14 @@ export class PoracleApiClient {
     return this.fetch('/api/dts/templates', { method: 'POST', body: JSON.stringify(entries) });
   }
 
+  async saveTemplateFile(type, platform, id, language, content) {
+    const params = new URLSearchParams({ type, platform, id: id || '', language: language || '' });
+    return this.fetch(`/api/dts/templates/file?${params}`, {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    });
+  }
+
   async enrichWebhook(type, webhook, language = 'en') {
     return this.fetch('/api/dts/enrich', {
       method: 'POST',
