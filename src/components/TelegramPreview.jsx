@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 
 function parseTelegramMarkdown(text) {
   if (!text) return null;
+  if (typeof text !== 'string') text = String(text);
   // Convert Telegram Markdown to HTML for display
   // Bold: **text** or *text* (Telegram v1 uses *text*)
   // Italic: __text__ (Telegram v1) or _text_
@@ -84,17 +85,18 @@ function PhotoMessage({ url }) {
 
 function TextMessage({ content, parseMode, webpagePreview }) {
   if (!content) return null;
+  const textContent = typeof content === 'string' ? content : String(content);
 
   const html = useMemo(() => {
     if (parseMode?.toLowerCase() === 'html') {
       // Allowlist only HTML tags Telegram actually supports
       const allowedTags = new Set(['b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del', 'code', 'pre', 'a', 'br']);
-      return content.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag) => {
+      return textContent.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag) => {
         return allowedTags.has(tag.toLowerCase()) ? match : match.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       });
     }
-    return parseTelegramMarkdown(content);
-  }, [content, parseMode]);
+    return parseTelegramMarkdown(textContent);
+  }, [textContent, parseMode]);
 
   return (
     <TelegramBubble>
