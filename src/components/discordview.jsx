@@ -119,7 +119,8 @@ export default function DiscordView({
   error = null,
   data = {},
 }) {
-  const { content, embed, embeds } = data;
+  const { content, embed } = data;
+  const embeds = Array.isArray(data.embeds) ? data.embeds : null;
   const bgColor = darkTheme ? 'bg-discord-dark' : 'bg-discord-light';
   const cls = `w-100 h-100 br2 flex flex-column white overflow-hidden ${bgColor}`;
 
