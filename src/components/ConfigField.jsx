@@ -324,6 +324,52 @@ function SensitiveField({ value, onChange }) {
   );
 }
 
+// Array of maps — each element is a group of key→value pairs (e.g. exclusive role groups)
+function MapArrayField({ value, onChange }) {
+  const items = Array.isArray(value) ? value : [];
+
+  const updateGroup = (index, newMap) => {
+    const updated = [...items];
+    updated[index] = newMap;
+    onChange(updated);
+  };
+
+  const addGroup = () => {
+    onChange([...items, {}]);
+  };
+
+  const removeGroup = (index) => {
+    onChange(items.filter((_, i) => i !== index));
+  };
+
+  return (
+    <div className="space-y-2">
+      {items.map((group, i) => (
+        <div key={i} className="border border-gray-700 rounded p-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] text-gray-500">Group {i + 1}</span>
+            <button
+              onClick={() => removeGroup(i)}
+              className="text-xs text-red-400 hover:text-red-300"
+              type="button"
+            >
+              Remove
+            </button>
+          </div>
+          <MapField value={group} onChange={(newMap) => updateGroup(i, newMap)} />
+        </div>
+      ))}
+      <button
+        onClick={addGroup}
+        className="text-xs text-blue-400 hover:text-blue-300"
+        type="button"
+      >
+        + Add group
+      </button>
+    </div>
+  );
+}
+
 function MapField({ value, onChange }) {
   const entries = Object.entries(value || {});
 
@@ -454,6 +500,8 @@ export default function ConfigField({ field, value, onChange, isDirty, defaultVa
           <NumberField value={value} onChange={onChange} isFloat={false} placeholder={placeholder} />
         ) : type === 'float' ? (
           <NumberField value={value} onChange={onChange} isFloat={true} placeholder={placeholder} />
+        ) : type === 'map[]' ? (
+          <MapArrayField value={value} onChange={onChange} />
         ) : type === 'map' ? (
           <MapField value={value} onChange={onChange} />
         ) : type === 'color[]' ? (
