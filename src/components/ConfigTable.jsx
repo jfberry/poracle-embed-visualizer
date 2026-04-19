@@ -35,7 +35,9 @@ export default function ConfigTable({ table, value, onChange, resolveIds, geofen
   const addEntry = () => {
     const newEntry = {};
     for (const field of table.fields) {
-      if (field.type === 'string[]') newEntry[field.name] = [];
+      if (field.nullable) {
+        newEntry[field.name] = null;
+      } else if (field.type === 'string[]') newEntry[field.name] = [];
       else if (field.type === 'bool') newEntry[field.name] = false;
       else if (field.type === 'int' || field.type === 'float') newEntry[field.name] = 0;
       else newEntry[field.name] = '';

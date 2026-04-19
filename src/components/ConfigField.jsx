@@ -219,24 +219,45 @@ function ResolvableStringField({ value, onChange, resolve, resolveIds, placehold
   );
 }
 
-function NumberField({ value, onChange, isFloat, placeholder }) {
+function NumberField({ value, onChange, isFloat, placeholder, nullable }) {
   return (
     <input
       className={inputClass}
       type="number"
       step={isFloat ? 'any' : '1'}
       value={value ?? ''}
-      placeholder={placeholder}
+      placeholder={nullable ? 'Inherit' : placeholder}
       onChange={(e) => {
         const v = e.target.value;
-        if (v === '') onChange(undefined);
+        if (v === '') onChange(nullable ? null : undefined);
         else onChange(isFloat ? parseFloat(v) : parseInt(v, 10));
       }}
     />
   );
 }
 
-function BoolField({ value, onChange, label }) {
+function BoolField({ value, onChange, label, nullable }) {
+  if (nullable) {
+    // Tri-state: null (inherit) / true (yes) / false (no)
+    const state = value === null || value === undefined ? 'inherit' : value ? 'yes' : 'no';
+    return (
+      <div className="space-y-1">
+        {['inherit', 'yes', 'no'].map((opt) => (
+          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              checked={state === opt}
+              onChange={() => onChange(opt === 'inherit' ? null : opt === 'yes')}
+              className="rounded"
+            />
+            <span className={`text-sm ${state === opt ? 'text-gray-200' : 'text-gray-400'}`}>
+              {opt === 'inherit' ? 'Inherit (default)' : opt === 'yes' ? 'Yes' : 'No'}
+            </span>
+          </label>
+        ))}
+      </div>
+    );
+  }
   return (
     <label className="flex items-center gap-2 cursor-pointer">
       <input
@@ -509,6 +530,9 @@ export default function ConfigField({ field, value, onChange, isDirty, defaultVa
         {!hotReload && (
           <span className="text-[10px] text-amber-500" title="Requires restart to take effect">🔄</span>
         )}
+        {field.nullable && value === null && (
+          <span className="text-[9px] px-1 py-px bg-gray-800 text-gray-400 rounded">inherit</span>
+        )}
         {isDirty && (
           <span className="text-[10px] text-blue-400">modified</span>
         )}
@@ -541,13 +565,13 @@ export default function ConfigField({ field, value, onChange, isDirty, defaultVa
         {sensitive ? (
           <SensitiveField value={value} onChange={onChange} />
         ) : type === 'bool' ? (
-          <BoolField value={value} onChange={onChange} label={description} />
+          <BoolField value={value} onChange={onChange} label={description} nullable={field.nullable} />
         ) : type === 'select' && options ? (
           <SelectField value={value} onChange={onChange} options={options} />
         ) : type === 'int' ? (
-          <NumberField value={value} onChange={onChange} isFloat={false} placeholder={placeholder} />
+          <NumberField value={value} onChange={onChange} isFloat={false} placeholder={placeholder} nullable={field.nullable} />
         ) : type === 'float' ? (
-          <NumberField value={value} onChange={onChange} isFloat={true} placeholder={placeholder} />
+          <NumberField value={value} onChange={onChange} isFloat={true} placeholder={placeholder} nullable={field.nullable} />
         ) : type === 'map[]' ? (
           <MapArrayField value={value} onChange={onChange} resolveHint={resolve} resolveIds={resolveIds} />
         ) : type === 'map' ? (
