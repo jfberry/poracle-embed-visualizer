@@ -162,18 +162,14 @@ export default function App() {
   const handleConnect = useCallback(async (url, secret) => {
     const client = await api.connect(url, secret);
     if (client) {
-      // Verify auth by loading templates — this is the first authenticated call.
-      // If the secret is wrong, this will fail and we disconnect.
+      // Auth already verified in api.connect() — load templates
       try {
         const result = await client.getTemplates();
         if (result.templates) {
           dts.loadTemplates(result.templates);
         }
       } catch (err) {
-        // Auth failed or API error — disconnect and show the error
-        api.disconnect();
-        api.setError?.(`Authentication failed: ${err.message}`);
-        return;
+        console.error('Failed to load templates:', err);
       }
       try {
         const result = await client.getPartials();

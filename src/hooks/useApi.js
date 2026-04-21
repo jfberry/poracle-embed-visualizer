@@ -11,6 +11,10 @@ export function useApi() {
     try {
       const client = new PoracleApiClient(baseUrl, secret);
       await client.health();
+      // Verify auth with an authenticated endpoint before marking connected.
+      // This prevents the UI from flashing the editor then bouncing back
+      // to the connect screen when the secret is wrong.
+      await client.getConfigSchema();
       clientRef.current = client;
       setUrl(baseUrl);
       setConnected(true);
