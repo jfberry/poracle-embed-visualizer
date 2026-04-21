@@ -94,6 +94,14 @@ export function registerAllHelpers(hbs) {
     return conditional(result, this, options);
   });
 
+  hbs.registerHelper('oneOf', function (...args) {
+    const options = args.pop();
+    if (args.length < 2) return conditional(false, this, options);
+    const value = String(args[0]);
+    const result = args.slice(1).some((candidate) => String(candidate) === value);
+    return conditional(result, this, options);
+  });
+
   hbs.registerHelper('default', function (value, defaultValue) {
     return value || defaultValue;
   });
